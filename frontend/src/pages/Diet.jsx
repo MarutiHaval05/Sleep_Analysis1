@@ -1,174 +1,162 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Utensils, AlertCircle, CheckCircle } from 'lucide-react';
-import Navigation from '../components/Navigation';
-import API_BASE_URL from '../config';
-
-const Diet = () => {
-    const [temperature, setTemperature] = React.useState(36.5);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState(null);
-    const [prediction, setPrediction] = React.useState(null);
-
-    const generateRecommendation = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            // 1. Fetch latest sensor data
-            const sensorResponse = await fetch(`${API_BASE_URL}/api/sensor/latest`);
-            const sensorResult = await sensorResponse.json();
-
-            let sensorData = {};
-            if (sensorResult.success && sensorResult.data) {
-                sensorData = sensorResult.data;
             }
 
-            // 2. Prepare payload for prediction
-            // Mapping: 
-            // bvp -> ir (proxy)
-            // acc_x, acc_y, acc_z -> accel.x, accel.y, accel.z
-            // temp -> user input
-
-            const payload = {
-                bvp: sensorData.MAX30102?.ir || 0,
-                acc_x: sensorData.MPU6050?.accel?.x || 0,
-                acc_y: sensorData.MPU6050?.accel?.y || 0,
-                acc_z: sensorData.MPU6050?.accel?.z || 0,
-                temp: temperature,
-                subject: "user" // Default subject
-            };
-
-            // 3. Call prediction API
-            const predictResponse = await fetch(`${API_BASE_URL}/predict`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-
-            const result = await predictResponse.json();
-
-            if (result.error) {
-                throw new Error(result.error);
-            }
-
-            setPrediction(result);
+setPrediction(result);
 
         } catch (err) {
-            console.error("Error generating recommendation:", err);
-            setError("Failed to generate recommendation. Please try again.");
-        } finally {
-            setLoading(false);
-        }
+    console.error("Error generating recommendation:", err);
+    setError("Failed to generate recommendation. Please try again.");
+} finally {
+    setLoading(false);
+}
     };
 
-    return (
-        <div className="min-h-screen bg-slate-950 text-white">
-            <Navigation />
-            <div className="p-6 md:p-12">
-                <div className="max-w-4xl mx-auto">
-                    <header className="mb-12">
-                        <h1 className="text-3xl font-bold mb-2">Diet Recommendations</h1>
-                        <p className="text-slate-400">Personalized nutrition plan based on your sleep health.</p>
-                    </header>
+return (
+    <div className="min-h-screen bg-[#F8FAFC] font-sans pb-12">
+        <Navigation />
 
-                    {/* Input Section */}
-                    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl mb-8">
-                        <h3 className="text-xl font-semibold mb-4">Input Health Data</h3>
-                        <div className="flex flex-col md:flex-row gap-4 items-end">
-                            <div className="flex-1">
-                                <label className="block text-slate-400 mb-2 text-sm">Body Temperature (°C)</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={temperature}
-                                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                                />
-                            </div>
-                            <button
-                                onClick={generateRecommendation}
-                                disabled={loading}
-                                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                                {loading ? 'Analyzing...' : 'Generate Recommendation'}
-                            </button>
-                        </div>
-                        {error && (
-                            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4" />
-                                {error}
-                            </div>
-                        )}
+        <div className="max-w-7xl mx-auto px-6 pt-8">
+            {/* Standard Header */}
+            <header className="mb-10">
+                <h1 className="text-3xl font-bold text-[#0F172A] mb-2 flex items-center gap-2">
+                    <Utensils className="w-8 h-8 text-[#2563EB]" />
+                    Diet Recommendation
+                </h1>
+                <p className="text-[#64748B]">Personalized nutrition strategy based on your Ayurvedic profile and vitals.</p>
+            </header>
+
+            {/* Context Section (Restored Style) */}
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100 p-6 rounded-[16px] mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-white rounded-xl shadow-sm">
+                        <Utensils className="w-6 h-6 text-purple-600" />
                     </div>
-
-                    {/* Results Section */}
-                    {prediction && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20 p-8 rounded-2xl mb-12"
-                            >
-                                <div className="flex items-start gap-4">
-                                    <AlertCircle className="w-6 h-6 text-purple-400 mt-1" />
-                                    <div>
-                                        <h3 className="text-xl font-semibold mb-2">Detected Pattern: {prediction.condition}</h3>
-                                        <p className="text-slate-300">
-                                            Based on your recent sleep analysis (using sensor data and temperature), we've adjusted your diet plan.
-                                        </p>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div className="space-y-6">
-                                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                                        <CheckCircle className="text-green-400" /> Recommended
-                                    </h3>
-                                    <div className="grid gap-4">
-                                        {prediction.foods_to_eat?.map((food, index) => (
-                                            <motion.div
-                                                key={index}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.1 }}
-                                                className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between"
-                                            >
-                                                <span>{food}</span>
-                                                <Utensils className="w-4 h-4 text-slate-500" />
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                                        <AlertCircle className="text-red-400" /> Avoid
-                                    </h3>
-                                    <div className="grid gap-4">
-                                        {prediction.foods_to_avoid?.map((food, index) => (
-                                            <motion.div
-                                                key={index}
-                                                initial={{ opacity: 0, x: 20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.1 }}
-                                                className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between opacity-75"
-                                            >
-                                                <span className="line-through text-slate-400">{food}</span>
-                                                <Utensils className="w-4 h-4 text-slate-500" />
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
+                    <div>
+                        <h3 className="font-semibold text-purple-900">Your Health Profile</h3>
+                        <p className="text-purple-600/80 text-sm">Based on your Ayurveda Quiz & Sleep Analysis</p>
+                    </div>
+                </div>
+                <div className="flex gap-3">
+                    <div className="px-4 py-2 bg-white rounded-lg border border-purple-100 shadow-sm text-center">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Dosha</p>
+                        <p className="font-medium text-purple-700">{dosha || 'Unknown'}</p>
+                    </div>
+                    <div className="px-4 py-2 bg-white rounded-lg border border-purple-100 shadow-sm text-center">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Condition</p>
+                        <p className="font-medium text-purple-700">{disorder || 'Unknown'}</p>
+                    </div>
+                    <div className="px-4 py-2 bg-white rounded-lg border border-purple-100 shadow-sm text-center">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Temp</p>
+                        <p className="font-medium text-purple-700">{temperature}°C</p>
+                    </div>
                 </div>
             </div>
+
+            {/* Generate Button Area */}
+            <div className="flex justify-end mb-8">
+                <button
+                    onClick={generateRecommendation}
+                    disabled={loading}
+                    className="bg-[#2563EB] hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                    {loading ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Analyzing...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="w-4 h-4" />
+                            Generate Plan
+                        </>
+                    )}
+                </button>
+            </div>
+
+            {/* Results Section */}
+            <AnimatePresence>
+                {prediction && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ type: "spring", bounce: 0.2 }}
+                        className="space-y-8"
+                    >
+                        {/* Insight Text */}
+                        <div className="bg-white rounded-[16px] p-6 border border-[#E5E7EB] shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+                            <h3 className="text-lg font-bold text-[#0F172A] mb-2">Strategic Insight</h3>
+                            <p className="text-[#475569] leading-relaxed">
+                                {prediction.recommendation_text || "Your customized plan focuses on balancing your natural constitution."}
+                            </p>
+                        </div>
+
+                        {/* Harmonized Tag Grid Layout */}
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {/* Recommended Grid */}
+                            <div className="bg-white rounded-[16px] border border-[#E5E7EB] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden flex flex-col">
+                                <div className="p-6 border-b border-[#E5E7EB] bg-[#F8FAFC]">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-white border border-[#E2E8F0]">
+                                            <CheckCircle className="w-5 h-5 text-[#475569]" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-[#0F172A] font-sans">Recommended</h3>
+                                            <p className="text-[#64748B] text-xs font-medium uppercase tracking-wide">Beneficial for {dosha}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <div className="flex flex-wrap gap-2">
+                                        {prediction.foods_to_eat?.map((food, index) => (
+                                            <motion.span
+                                                key={index}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: index * 0.03 }}
+                                                className="inline-flex items-center px-4 py-2 rounded-lg bg-[#F8FAFC] text-[#0F172A] text-sm font-semibold border border-[#CBD5E1] hover:bg-[#F1F5F9] transition-colors cursor-default shadow-sm"
+                                            >
+                                                {food}
+                                            </motion.span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Avoid Grid */}
+                            <div className="bg-white rounded-[16px] border border-[#E5E7EB] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden flex flex-col">
+                                <div className="p-6 border-b border-[#E5E7EB] bg-[#F8FAFC]">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-white border border-[#E2E8F0]">
+                                            <Ban className="w-5 h-5 text-[#94A3B8]" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-[#0F172A] font-sans">Avoid</h3>
+                                            <p className="text-[#64748B] text-xs font-medium uppercase tracking-wide">Aggravates {dosha}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <div className="flex flex-wrap gap-2">
+                                        {prediction.foods_to_avoid?.map((food, index) => (
+                                            <motion.span
+                                                key={index}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: index * 0.03 }}
+                                                className="inline-flex items-center px-4 py-2 rounded-lg bg-[#FFF1F2] text-[#9F1239] text-sm font-semibold border border-[#FECDD3] hover:bg-[#FFE4E6] transition-colors cursor-default shadow-sm"
+                                            >
+                                                {food}
+                                            </motion.span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
-    );
+    </div>
+);
 };
 
 export default Diet;

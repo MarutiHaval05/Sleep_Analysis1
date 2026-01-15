@@ -4,8 +4,10 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Ayurveda from './pages/Ayurveda';
 import Diet from './pages/Diet';
 import Profile from './pages/Profile';
+import Yoga from './pages/Yoga';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Protected Route Component
@@ -36,6 +38,11 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
+          <Route path="/ayurveda" element={
+            <ProtectedRoute>
+              <Ayurveda />
+            </ProtectedRoute>
+          } />
           <Route path="/diet" element={
             <ProtectedRoute>
               <Diet />
@@ -44,6 +51,11 @@ function App() {
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/yoga" element={
+            <ProtectedRoute>
+              <Yoga />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />
